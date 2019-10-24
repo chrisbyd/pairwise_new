@@ -51,7 +51,7 @@ class SigmoidCrossEntropyLoss(nn.Module):
                         torch.mul(torch.div(sum_all_elements, sum_negative_identities), s_)
 
         dis = cdist(feature1, feature2,'cosine')
-        dis = 10*dis
+        dis = 5*dis
         dis = dis.cuda()
 
 
@@ -72,7 +72,7 @@ class SigmoidCrossEntropyLoss(nn.Module):
         balance_param_thermal = torch.mul(torch.div(s_all_thermal, s_same_thermal), s_thermal) + \
                                 torch.mul(torch.div(s_all_thermal, s_negative_thermal), s_thermal_negative)
         dis_thermal = cdist(feature2, feature2,'cosine')
-        dis_thermal = 10* dis_thermal
+        dis_thermal = 5* dis_thermal
         Loss_thermal = torch.log(1 + torch.exp(dis_thermal)) - s * dis_thermal
         weighted_loss_thermal = torch.mean(Loss_thermal * balance_param_thermal)
 
@@ -89,8 +89,8 @@ class SigmoidCrossEntropyLoss(nn.Module):
         s_visible_negative = negative_mask_visible.int().cuda()
         balance_param_visible = torch.mul(torch.div(s_all_visible, s_same_visible), s_visible) + \
                                 torch.mul(torch.div(s_all_visible, s_negative_visible), s_visible_negative)
-        dis_visible = cdist(feature2, feature2,'cosine')
-        dis_visible = 10* dis_visible
+        dis_visible = cdist(feature1, feature1,'cosine')
+        dis_visible = 5* dis_visible
         Loss_visible = torch.log(1 + torch.exp(dis_visible)) - s * dis_visible
         weighted_loss_visible = torch.mean(Loss_visible * balance_param_visible)
 

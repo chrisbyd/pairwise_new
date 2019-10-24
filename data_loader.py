@@ -60,6 +60,7 @@ class RegDBData(data.Dataset):
             img = Image.open(data_dir+ thermal_img_file[i])
             img = img.resize((144, 288), Image.ANTIALIAS)
             pix_array = np.array(img)
+
             train_thermal_image.append(pix_array)
         train_thermal_image = np.array(train_thermal_image)
         
@@ -79,9 +80,11 @@ class RegDBData(data.Dataset):
 
         img1,  target1 = self.train_color_image[self.cIndex[index]],  self.train_color_label[self.cIndex[index]]
         img2,  target2 = self.train_thermal_image[self.tIndex[index]], self.train_thermal_label[self.tIndex[index]]
-        
+
+
         img1 = self.transform(img1)
         img2 = self.transform(img2)
+
 
         return img1, img2, target1, target2
 

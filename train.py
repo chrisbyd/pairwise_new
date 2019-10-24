@@ -18,6 +18,9 @@ from utils import *
 from sigmoid_cross_entropy_loss import *
 from cauchy_cross_entropy_loss import  *
 from pairwise_loss import *
+import matplotlib.pyplot as plt
+from bidirectional_triplet_loss import *
+from sigmoid_triplet import  *
 
 parser = argparse.ArgumentParser(description='PyTorch Cross-Modality Training')
 parser.add_argument('--dataset', default='sysu',  help='dataset name: regdb or sysu]')
@@ -103,11 +106,15 @@ feature_dim = args.low_dim
 print('==> Loading data..')
 # Data loading code
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+#normalize = transforms.Normalize(mean=[0.5],std=[0.5])
+
 transform_train = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Pad(10),
     transforms.RandomCrop((args.img_h,args.img_w)),
     transforms.RandomHorizontalFlip(),
+    #transforms.RandomRotation((30,60)),
+    #transforms.RandomGrayscale(p=0.2),
     transforms.ToTensor(),
     normalize,
 ])
@@ -115,7 +122,7 @@ transform_test = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((args.img_h,args.img_w)),
     transforms.ToTensor(),
-    normalize,
+   normalize,
 ])
 
 end = time.time()
@@ -186,8 +193,12 @@ if args.method =='id':
 #
 # criterion_sigmoid = SigmoidCrossEntropyLoss(args.lamda1,args.batch_size)
 # criterion_sigmoid.to(device)
-criterion_pairwise = pairwise_hinge_loss(0.8,args.lamda1,args.batch_size)
-criterion_pairwise.to(device)
+# criterion_pairwise = pairwise_hinge_loss(0.8,args.lamda1,args.batch_size)
+# criterion_pairwise.to(device)
+criterion_BI = BiDirectionalLoss(args.lamda1,args.batch_size,0.5)
+criterion_BI.to(device)
+criterion_BI = BiDirectionalLoss(args.lamda1,args.batch_size,0.5)
+criterion_BI.to(device)
 
 
 ignored_params = list(map(id, net.feature.parameters() )) + list(map(id, net.classifier.parameters())) 
@@ -206,9 +217,9 @@ elif args.optim == 'adam':
          
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    if epoch < 200:
+    if epoch < 80:
         lr = args.lr
-    elif epoch >= 200 and epoch < 300:
+    elif epoch >= 80 and epoch < 120:
         lr = args.lr * 0.1
     else:
         lr = args.lr * 0.01
@@ -230,6 +241,7 @@ def train(epoch):
     net.train()
     end = time.time()
     for batch_idx, (input1, input2, label1, label2) in enumerate(trainloader):
+
         input1 = Variable(input1.cuda())
         input2 = Variable(input2.cuda())
         
@@ -251,8 +263,8 @@ def train(epoch):
 
         #the total loss
         #-----------------------------------------
-        loss_sigmoid = criterion_pairwise(feat,label1,label2)
-        loss=loss_sigmoid
+        loss_bi = criterion_BI(feat,label1,label2)
+        loss=loss_bi + args.lamda2 * loss_id
 
 
         optimizer.zero_grad()    
@@ -324,7 +336,7 @@ def test(epoch):
     
 # training
 print('==> Start Training...')    
-for epoch in range(start_epoch, 400-start_epoch):
+for epoch in range(start_epoch, 200-start_epoch):
 
     print('==> Preparing Data Loader...')
     # identity sampler
