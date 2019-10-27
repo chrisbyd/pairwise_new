@@ -86,14 +86,26 @@ if not os.path.isdir(checkpoint_path):
  
 if args.method =='id':
     suffix = dataset + '_id_bn_relu'
+elif args.method == 'bd':
+    suffix = dataset + '_bidiretional_bn_relu_'
+elif args.method == 'st':
+    suffix = dataset + '_sigmoidtriplet_bn_relu_'
+elif args.method == 'sc':
+    suffix = dataset + '_sigmoidcrossentropy_bn_relu'
+
 suffix = suffix + '_drop_{}'.format(args.drop) 
 suffix = suffix + '_lr_{:1.1e}'.format(args.lr) 
 suffix = suffix + '_dim_{}'.format(args.low_dim)
+suffix = suffix + '_lamda1_{}'.format(args.lamda1)
+suffix = suffix + '_lamda2_{}'.format(args.lamda2)
 if not args.optim == 'sgd':
     suffix = suffix + '_' + args.optim
 suffix = suffix + '_' + args.arch
 if dataset =='regdb':
     suffix = suffix + '_trial_{}'.format(args.trial)
+
+if dataset =='sysu':
+    suffix = suffix + '__mode__{}'.format_map(args.mode)
 
 test_log_file = open(log_path + suffix + '.txt', "w")
 sys.stdout = Logger(log_path  + suffix + '_os.txt')
@@ -187,18 +199,21 @@ if len(args.resume)>0:
     else:
         print('==> no checkpoint found at {}'.format(args.resume))
 
-if args.method =='id':
-    criterion = nn.CrossEntropyLoss()
-    criterion.to(device)
-#
-# criterion_sigmoid = SigmoidCrossEntropyLoss(args.lamda1,args.batch_size)
-# criterion_sigmoid.to(device)
-# criterion_pairwise = pairwise_hinge_loss(0.8,args.lamda1,args.batch_size)
-# criterion_pairwise.to(device)
-criterion_BI = BiDirectionalLoss(args.lamda1,args.batch_size,0.5)
-criterion_BI.to(device)
-criterion_BI = BiDirectionalLoss(args.lamda1,args.batch_size,0.5)
-criterion_BI.to(device)
+criterion = nn.CrossEntropyLoss()
+criterion.to(device)
+
+if args.method =='bd':
+    criterion1 = BiDirectionalLoss(args.lamda1,args.batch_size,0.5)
+    criterion1.to(device)
+elif args.method == 'st':
+    criterion1 = SigmoidTriplet(args.lamda1,args.batch_size,0.5)
+    criterion1.to(device)
+elif args.method == 'sc':
+    criterion1 = SigmoidCrossEntropyLoss(args.lamda1,args.batch_size)
+    criterion1.to(device)
+
+
+
 
 
 ignored_params = list(map(id, net.feature.parameters() )) + list(map(id, net.classifier.parameters())) 
@@ -217,9 +232,9 @@ elif args.optim == 'adam':
          
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    if epoch < 80:
+    if epoch < 40:
         lr = args.lr
-    elif epoch >= 80 and epoch < 120:
+    elif epoch >= 40 and epoch < 80:
         lr = args.lr * 0.1
     else:
         lr = args.lr * 0.01
@@ -256,15 +271,15 @@ def train(epoch):
         # print(label1)
         # print(label2)
         # exit()
-        if args.method =='id':
-            loss_id = criterion(outputs, labels)
-            _, predicted = outputs.max(1)
-            correct += predicted.eq(labels).sum().item()
+
+        loss_id = criterion(outputs, labels)
+        _, predicted = outputs.max(1)
+        correct += predicted.eq(labels).sum().item()
 
         #the total loss
         #-----------------------------------------
-        loss_bi = criterion_BI(feat,label1,label2)
-        loss=loss_bi + args.lamda2 * loss_id
+        loss_ancillary = criterion1(feat,label1,label2)
+        loss=loss_ancillary + args.lamda2 * loss_id
 
 
         optimizer.zero_grad()    
@@ -336,7 +351,7 @@ def test(epoch):
     
 # training
 print('==> Start Training...')    
-for epoch in range(start_epoch, 200-start_epoch):
+for epoch in range(start_epoch, 800-start_epoch):
 
     print('==> Preparing Data Loader...')
     # identity sampler
