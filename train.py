@@ -105,7 +105,7 @@ if dataset =='regdb':
     suffix = suffix + '_trial_{}'.format(args.trial)
 
 if dataset =='sysu':
-    suffix = suffix + '__mode__{}'.format_map(args.mode)
+    suffix = suffix + '__mode__{}'.format(args.mode)
 
 test_log_file = open(log_path + suffix + '.txt', "w")
 sys.stdout = Logger(log_path  + suffix + '_os.txt')
