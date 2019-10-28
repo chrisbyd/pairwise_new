@@ -93,11 +93,18 @@ class SigmoidTriplet(nn.Module):
         # ----------------------------------------------------------------------------------
 
         dis_thermal = cdist(feature2, feature2)
-        idx1 = torch.cat((pos_positive.view(self.batch_size,1),pos_negative.view(self.batch_size,1)),1)
-        intra_diff1 = gather_2d(dis_thermal,idx1)
-
-        intra_diff1 = torch.clamp(0.1 -intra_diff1,min=0.0)
+        # idx1 = torch.cat((pos_positive.view(self.batch_size,1),pos_negative.view(self.batch_size,1)),1)
+        # intra_diff1 = gather_2d(dis_thermal,idx1)
+        #
+        # intra_diff1 = torch.clamp(0.1 -intra_diff1,min=0.0)
+        # intra_loss1 = torch.mean(intra_diff1)
+        same_identity_mask = torch.unsqueeze(label2, 1) == torch.unsqueeze(label2, 0)
+        s =same_identity_mask.int().cuda()
+        dis_thermal_different = dis_thermal +1e5*s
+        closest_negative = torch.min(dis_thermal_different + 1e5 * s, 1).values
+        intra_diff1 = torch.clamp(0.1 -closest_negative,min=0)
         intra_loss1 = torch.mean(intra_diff1)
+
 
 
 
@@ -124,13 +131,19 @@ class SigmoidTriplet(nn.Module):
         # ----------------------------------------------------------------------------------
 
         dis_visible = cdist(feature1, feature1)
-        idx1 = torch.cat((pos_positive.view(self.batch_size, 1), pos_negative.view(self.batch_size, 1)), 1)
-        intra_diff2 = gather_2d(dis_visible, idx1)
-        intra_diff2 = torch.clamp(0.1 - intra_diff2, 0.0)
+        # idx1 = torch.cat((pos_positive.view(self.batch_size, 1), pos_negative.view(self.batch_size, 1)), 1)
+        # intra_diff2 = gather_2d(dis_visible, idx1)
+        # intra_diff2 = torch.clamp(0.1 - intra_diff2, 0.0)
+        # intra_loss2 = torch.mean(intra_diff2)
+        same_identity_mask = torch.unsqueeze(label1, 1) == torch.unsqueeze(label1, 0)
+        s = same_identity_mask.int().cuda()
+        dis_visible_different = dis_visible + 1e5 * s
+        closest_negative = torch.min(dis_visible_different + 1e5 * s, 1).values
+        intra_diff2 = torch.clamp(0.1 - closest_negative, min=0)
         intra_loss2 = torch.mean(intra_diff2)
 
 
-        inter_loss = loss_cross_mean1+loss_cross_mean2
+        # inter_loss = loss_cross_mean1+loss_cross_mean2
         intra_loss = intra_loss1 +intra_loss2
 
         # Derive the total loss
