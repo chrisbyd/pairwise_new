@@ -45,7 +45,7 @@ parser.add_argument('--img_w', default=144, type=int,
                     metavar='imgw', help='img width')
 parser.add_argument('--img_h', default=288, type=int,
                     metavar='imgh', help='img height')
-parser.add_argument('--batch-size', default=64, type=int,
+parser.add_argument('--batch-size', default=32, type=int,
                     metavar='B', help='training batch size')
 parser.add_argument('--test-batch', default=64, type=int,
                     metavar='tb', help='testing batch size')
@@ -351,7 +351,7 @@ def test(epoch):
     
 # training
 print('==> Start Training...')    
-for epoch in range(start_epoch, 800-start_epoch):
+for epoch in range(start_epoch, 80-start_epoch):
 
     print('==> Preparing Data Loader...')
     # identity sampler
@@ -371,10 +371,12 @@ for epoch in range(start_epoch, 800-start_epoch):
         # testing
         cmc, mAP = test(epoch)
 
-        print('FC:   Rank-1: {:.2%} | Rank-5: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
-                cmc[0], cmc[4], cmc[9], mAP))
-        print('FC:   Rank-1: {:.2%} | Rank-5: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
-                cmc[0], cmc[4], cmc[9], mAP), file = test_log_file)
+        print('FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
+                cmc[0], cmc[1],cmc[2],cmc[3], cmc[4],cmc[5],cmc[6],cmc[7],cmc[8], cmc[9], mAP))
+        print(
+            'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
+                cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9], mAP),file=test_log_file)
+
         test_log_file.flush()
         
         # save model
