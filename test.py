@@ -71,6 +71,15 @@ net = embed_net(args.low_dim, n_class, drop = args.drop, arch=args.arch)
 net.to(device)    
 cudnn.benchmark = True
 
+
+test_log_dir = './log/test_log/'
+if not os.path.isdir(test_log_dir):
+    os.makedirs(test_log_dir)
+save_path = test_log_dir + args.resume[:-2]
+test_log_file = open(save_path+'.txt','w')
+
+
+
 print('==> Resuming from checkpoint..')
 checkpoint_path = args.model_path
 if len(args.resume)>0:   
@@ -239,6 +248,10 @@ elif dataset =='sysu':
         print ('Test Trial: {}'.format(trial))
         print('FC: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
             cmc[0], cmc[4], cmc[9], cmc[19]))
+        print(
+            'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
+                cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9], mAP),
+            file=test_log_file)
         print('mAP: {:.2%}'.format(mAP))
         print('POOL5: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
             cmc_pool[0], cmc_pool[4], cmc_pool[9], cmc_pool[19]))
