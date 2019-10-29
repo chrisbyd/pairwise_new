@@ -201,7 +201,10 @@ if len(args.resume)>0:
 
 criterion = nn.CrossEntropyLoss()
 criterion.to(device)
-
+use = 1
+if args.method == 'id':
+    use = 0
+    criterion1 = BiDirectionalLoss(args.lamda1, args.batch_size, 0.5)
 if args.method =='bd':
     criterion1 = BiDirectionalLoss(args.lamda1,args.batch_size,0.5)
     criterion1.to(device)
@@ -279,7 +282,7 @@ def train(epoch):
         #the total loss
         #-----------------------------------------
         loss_ancillary = criterion1(feat,label1,label2)
-        loss=loss_ancillary + args.lamda2 * loss_id
+        loss=use*loss_ancillary + args.lamda2 * loss_id
 
 
         optimizer.zero_grad()    
