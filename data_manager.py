@@ -51,7 +51,7 @@ def process_gallery_sysu(data_path, mode = 'all', trial = 0, relabel=False):
         ids = [int(y) for y in ids[0].split(',')]
         ids = ["%04d" % x for x in ids]
 
-    for id in sorted(ids):
+    for id in sorted(ids) :
         for cam in rgb_cameras:
             img_dir = os.path.join(data_path,cam,id)
             if os.path.isdir(img_dir):
