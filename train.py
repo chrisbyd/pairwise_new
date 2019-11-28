@@ -13,7 +13,7 @@ import torchvision.transforms as transforms
 from data_loader import SYSUData, RegDBData, TestData
 from data_manager import *
 from eval_metrics import eval_sysu, eval_regdb
-from model import embed_net
+from model import embed_net,Reconstruct
 from utils import *
 from sigmoid_cross_entropy_loss import *
 from cauchy_cross_entropy_loss import  *
@@ -21,6 +21,10 @@ from pairwise_loss import *
 import matplotlib.pyplot as plt
 from bidirectional_triplet_loss import *
 from sigmoid_triplet import  *
+from util.visualizer import *
+
+
+
 
 parser = argparse.ArgumentParser(description='PyTorch Cross-Modality Training')
 parser.add_argument('--dataset', default='sysu',  help='dataset name: regdb or sysu]')
@@ -39,13 +43,13 @@ parser.add_argument('--log_path', default='log/', type=str,
                     help='log save path')
 parser.add_argument('--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--low-dim', default=512, type=int,
+parser.add_argument('--low-dim', default=2048, type=int,
                     metavar='D', help='feature dimension')
 parser.add_argument('--img_w', default=144, type=int,
                     metavar='imgw', help='img width')
 parser.add_argument('--img_h', default=288, type=int,
                     metavar='imgh', help='img height')
-parser.add_argument('--batch-size', default=32, type=int,
+parser.add_argument('--batch-size', default=16, type=int,
                     metavar='B', help='training batch size')
 parser.add_argument('--test-batch', default=64, type=int,
                     metavar='tb', help='testing batch size')
@@ -63,7 +67,20 @@ parser.add_argument('--lamda1', default=0.5, type=float,
                     metavar='t', help='the weight for the modal-specific loss')
 parser.add_argument('--lamda2',default=0.6,type=float,help='the weight for the identity loss')
 
-args = parser.parse_args() 
+parser.add_argument('--lamda3',default=0.5,type=float,help='the weight auto encoder loss')
+
+#---- argument for displaying the images on
+parser.add_argument('--display_freq', type=int, default=400, help='frequency of showing training results on screen')
+parser.add_argument('--display_ncols', type=int, default=4,
+                    help='if positive, display all images in a single visdom web panel with certain number of images per row.')
+parser.add_argument('--display_id', type=int, default=1, help='window id of the web display')
+parser.add_argument('--display_server', type=str, default="http://localhost", help='visdom server of the web display')
+parser.add_argument('--display_env', type=str, default='main',
+                    help='visdom display environment name (default is "main")')
+parser.add_argument('--display_port', type=int, default=8097, help='visdom port of the web display')
+parser.add_argument('--display_winsize', type=int, default=256, help='display window size for both visdom and HTML')
+
+args = parser.parse_args()
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 np.random.seed(0)
 
@@ -98,6 +115,7 @@ suffix = suffix + '_lr_{:1.1e}'.format(args.lr)
 suffix = suffix + '_dim_{}'.format(args.low_dim)
 suffix = suffix + '_lamda1_{}'.format(args.lamda1)
 suffix = suffix + '_lamda2_{}'.format(args.lamda2)
+suffix = suffix + '_lamda3_{}'.format(args.lamda3)
 if not args.optim == 'sgd':
     suffix = suffix + '_' + args.optim
 suffix = suffix + '_' + args.arch
@@ -117,7 +135,7 @@ feature_dim = args.low_dim
 
 print('==> Loading data..')
 # Data loading code
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],std=[0.5, 0.5, 0.5])
 #normalize = transforms.Normalize(mean=[0.5],std=[0.5])
 
 transform_train = transforms.Compose([
@@ -185,6 +203,8 @@ print('Data Loading Time:\t {:.3f}'.format(time.time()-end))
 print('==> Building model..')
 net = embed_net(args.low_dim, n_class, drop = args.drop, arch=args.arch)
 net.to(device)
+Rec_net = Reconstruct(args.batch_size)
+Rec_net.to(device)
 cudnn.benchmark = True
 
 if len(args.resume)>0:   
@@ -216,14 +236,19 @@ elif args.method == 'sc':
     criterion1.to(device)
 
 
+AutoEncoderLoss = AutoEncoderLoss()
+AutoEncoderLoss.to(device)
 
 
+#------------------visualizer for visualizing the auto encoding pictures
+visualizer = Visualizer(args)
 
 ignored_params = list(map(id, net.feature.parameters() )) + list(map(id, net.classifier.parameters())) 
 base_params = filter(lambda p: id(p) not in ignored_params, net.parameters())
 if args.optim == 'sgd':
     optimizer = optim.SGD([
          {'params': base_params, 'lr': 0.1*args.lr},
+        {'params': Rec_net.parameters(),'lr':args.lr},
          {'params': net.feature.parameters(), 'lr': args.lr},
          {'params': net.classifier.parameters(), 'lr': args.lr}],
          weight_decay=5e-4, momentum=0.9, nesterov=True)
@@ -231,6 +256,7 @@ elif args.optim == 'adam':
     optimizer = optim.Adam([
          {'params': base_params, 'lr': 0.1*args.lr},
          {'params': net.feature.parameters(), 'lr': args.lr},
+
          {'params': net.classifier.parameters(), 'lr': args.lr}],weight_decay=5e-4)
          
 def adjust_learning_rate(optimizer, epoch):
@@ -254,7 +280,7 @@ def train(epoch):
     batch_time = AverageMeter()
     correct = 0
     total = 0
-
+    visualizer.reset()
     # switch to train mode
     net.train()
     end = time.time()
@@ -268,7 +294,7 @@ def train(epoch):
         data_time.update(time.time() - end)
         
         outputs, feat = net(input1, input2)
-
+        visible_img_rec ,thermal_img_rec = Rec_net(feat)
         #debug the size of features ,labels
         # print(feat.size())
         # print(label1)
@@ -278,12 +304,12 @@ def train(epoch):
         loss_id = criterion(outputs, labels)
         _, predicted = outputs.max(1)
         correct += predicted.eq(labels).sum().item()
-
+        loss_ae = AutoEncoderLoss(input1,visible_img_rec,input2,thermal_img_rec)
         #the total loss
         #-----------------------------------------
         loss_ancillary = criterion1(feat,label1,label2)
-        loss=use*loss_ancillary + args.lamda2 * loss_id
-
+        loss=use*loss_ancillary + args.lamda2 * loss_id + args.lamda3*loss_ae
+       #  loss = loss_ae
 
         optimizer.zero_grad()    
         loss.backward()
@@ -305,6 +331,10 @@ def train(epoch):
                   epoch, batch_idx, len(trainloader),current_lr, 
                   100.*correct/total, batch_time=batch_time, 
                   data_time=data_time, train_loss=train_loss))
+        visuals = {"real_a": input1, "real_b": input2, "fake_a": visible_img_rec, "fake_b": thermal_img_rec}
+        visualizer.display_current_results(visuals=visuals, epoch=epoch, save_result=True)
+
+
 
 def test(epoch):   
     # switch to evaluation mode
@@ -354,7 +384,7 @@ def test(epoch):
     
 # training
 print('==> Start Training...')    
-for epoch in range(start_epoch, 80-start_epoch):
+for epoch in range(start_epoch, 100-start_epoch):
 
     print('==> Preparing Data Loader...')
     # identity sampler
