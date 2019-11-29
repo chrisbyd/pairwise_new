@@ -43,13 +43,13 @@ parser.add_argument('--log_path', default='log/', type=str,
                     help='log save path')
 parser.add_argument('--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--low-dim', default=2048, type=int,
+parser.add_argument('--low-dim', default=512, type=int,
                     metavar='D', help='feature dimension')
 parser.add_argument('--img_w', default=144, type=int,
                     metavar='imgw', help='img width')
 parser.add_argument('--img_h', default=288, type=int,
                     metavar='imgh', help='img height')
-parser.add_argument('--batch-size', default=16, type=int,
+parser.add_argument('--batch-size', default= 32, type=int,
                     metavar='B', help='training batch size')
 parser.add_argument('--test-batch', default=64, type=int,
                     metavar='tb', help='testing batch size')

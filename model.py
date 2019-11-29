@@ -155,7 +155,7 @@ class embed_net(nn.Module):
 class ReconstructNet(nn.Module):
     def __init__(self,feature_dim,norm_layer=nn.BatchNorm2d,ngf=64,output_nc=3):
         super(ReconstructNet,self).__init__()
-        self.pool_dim = 2048
+        self.pool_dim = 512
         self.fc = nn.Linear(feature_dim,self.pool_dim*9*5)
 
         model_2 = [
@@ -204,8 +204,8 @@ class ReconstructNet(nn.Module):
 class Reconstruct(nn.Module):
     def __init__(self,batch_size):
         super(Reconstruct,self).__init__()
-        self.reconstruct_visible_net = ReconstructNet(feature_dim=2048)
-        self.reconstruct_thermal_net = ReconstructNet(feature_dim=2048)
+        self.reconstruct_visible_net = ReconstructNet(feature_dim=512)
+        self.reconstruct_thermal_net = ReconstructNet(feature_dim=512)
         self.batch_size= batch_size
 
     def forward(self, input):
