@@ -101,3 +101,14 @@ class SigmoidCrossEntropyLoss(nn.Module):
         return Loss_total
 
 
+class AutoEncoderLoss(nn.Module):
+    def __init__(self):
+        super(AutoEncoderLoss,self).__init__()
+        self.mseloss = nn.MSELoss()
+
+    def forward(self, real_visible,rec_visible,real_thermal,rec_thermal):
+        loss1 = self.mseloss(real_visible,rec_visible)
+        loss2 = self.mseloss(real_thermal,rec_thermal)
+        return loss1+loss2
+
+

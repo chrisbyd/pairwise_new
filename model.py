@@ -129,6 +129,7 @@ class embed_net(nn.Module):
         elif arch =='resnet50':
             self.visible_net = visible_net_resnet(arch = arch)
             self.thermal_net = thermal_net_resnet(arch = arch)
+            print('the pool dim is %s'%arch)
             pool_dim = 2048
 
         self.feature = FeatureBlock(pool_dim, low_dim, dropout = drop)
@@ -152,7 +153,67 @@ class embed_net(nn.Module):
         else:
             return self.l2norm(x), self.l2norm(y)
 
-            
+class ReconstructNet(nn.Module):
+    def __init__(self,feature_dim,norm_layer=nn.BatchNorm2d,ngf=64,output_nc=3):
+        super(ReconstructNet,self).__init__()
+        self.pool_dim = 2048
+        self.fc = nn.Linear(feature_dim,self.pool_dim*9*5)
+
+        model_2 = [
+            norm_layer(self.pool_dim),
+            nn.ConvTranspose2d(self.pool_dim, 256, stride=2, padding=1, kernel_size=3, output_padding=(1, 0)),
+            norm_layer(256),
+            nn.ReLU(True)
+        ]
+        model_2 += [
+            nn.ConvTranspose2d(256, 128, stride=2, padding=1, kernel_size=3, output_padding=1),
+            norm_layer(128),
+            nn.ReLU(True)
+        ]
+        model_2 += [
+            nn.ConvTranspose2d(128, 64, stride=2, padding=1, kernel_size=3, output_padding=1),
+            norm_layer(64),
+            nn.ReLU(True)
+        ]
+        model_2 += [
+            nn.Upsample(scale_factor=2)
+        ]
+        model_2 += [
+            nn.ConvTranspose2d(64, ngf, stride=2, padding=1, kernel_size=3, output_padding=1),
+            norm_layer(ngf),
+            nn.ReLU(True)
+        ]
+        model_2 += [
+            nn.ReflectionPad2d(3),
+            nn.Conv2d(ngf, output_nc, kernel_size=7, padding=0),
+            nn.Tanh()
+        ]
+
+        self.model_2 = nn.Sequential(*model_2)
+
+    def forward(self, input):
+        output_1 = self.fc(input)
+
+        resize = output_1.view(output_1.shape[0], self.pool_dim, 9, 5)
+
+        fake_img = self.model_2(resize)
+
+        return fake_img
+
+
+
+class Reconstruct(nn.Module):
+    def __init__(self,batch_size):
+        super(Reconstruct,self).__init__()
+        self.reconstruct_visible_net = ReconstructNet(feature_dim=2048)
+        self.reconstruct_thermal_net = ReconstructNet(feature_dim=2048)
+        self.batch_size= batch_size
+
+    def forward(self, input):
+        visible_feature, thermal_feature = torch.split(input,self.batch_size,dim= 0)
+        re_visible_img = self.reconstruct_visible_net(visible_feature)
+        re_therm_img = self.reconstruct_thermal_net(thermal_feature)
+        return re_visible_img,re_therm_img
 # debug model structure
 
 # net = embed_net(512, 319)
