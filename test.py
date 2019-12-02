@@ -28,7 +28,7 @@ parser.add_argument('--model_path', default='save_model/', type=str, help='model
 parser.add_argument('--log_path', default='log/', type=str, help='log save path')
 parser.add_argument('--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
-parser.add_argument('--low-dim', default=512, type=int,
+parser.add_argument('--low-dim', default=2048, type=int,
                     metavar='D', help='feature dimension')
 parser.add_argument('--img_w', default=144, type=int,
                     metavar='imgw', help='img width')
@@ -101,11 +101,10 @@ if args.method =='id':
 
 print('==> Loading data..')
 # Data loading code
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],std=[0.5, 0.5, 0.5])
 transform_train = transforms.Compose([
     transforms.ToPILImage(),
     transforms.RandomCrop((args.img_h,args.img_w)),
-    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     normalize,
 ])
@@ -270,8 +269,12 @@ elif dataset =='sysu':
         print('POOL5: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
             cmc_pool[0], cmc_pool[4], cmc_pool[9], cmc_pool[19]))
         print('mAP: {:.2%}'.format(mAP_pool))
+        print(
+            'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
+                cmc_pool[0], cmc_pool[1], cmc_pool[2], cmc_pool[3], cmc_pool[4], cmc_pool[5], cmc_pool[6], cmc_pool[7], cmc_pool[8], cmc_pool[9], mAP_pool),
+            file=test_log_file)
 
-    cmc = all_cmc /10 
+    cmc = all_cmc /10
     mAP = all_mAP /10
 
     cmc_pool = all_cmc_pool /10 

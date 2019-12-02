@@ -129,6 +129,7 @@ class embed_net(nn.Module):
         elif arch =='resnet50':
             self.visible_net = visible_net_resnet(arch = arch)
             self.thermal_net = thermal_net_resnet(arch = arch)
+            print('the pool dim is %s'%arch)
             pool_dim = 2048
 
         self.feature = FeatureBlock(pool_dim, low_dim, dropout = drop)
