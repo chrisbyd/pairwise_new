@@ -80,3 +80,74 @@ def process_test_regdb(img_dir, trial = 1, modal = 'visible'):
         file_label = [int(s.split(' ')[1]) for s in data_file_list]
         
     return file_image, np.array(file_label)
+
+def process_query_sysu_reverse(data_path, mode = 'all'):
+    if mode== 'all':
+        rgb_cameras = ['cam1','cam2','cam4','cam5']
+    elif mode =='indoor':
+        rgb_cameras = ['cam1','cam2']
+    file_path = os.path.join(data_path,'exp/test_id.txt')
+    files_query_rgb = []
+    with open(file_path,'r') as file:
+        ids = file.read().splitlines()
+        ids = [int(y) for y in ids[0].split(',')]
+        ids = ["%04d"% x for x in ids]
+
+    for id in sorted(ids):
+        for cam in rgb_cameras:
+            img_dir = os.path.join(data_path,cam,id)
+            if os.path.isdir(img_dir):
+                new_files = sorted([img_dir + '/' + i for i in os.listdir(img_dir)])
+                files_query_rgb.extend(new_files)
+
+
+    query_img = []
+    query_id = []
+    query_cam= []
+    for img_path in files_query_rgb:
+        camid, pid = int(img_path[-15]), int(img_path[-13:-9])
+        query_img.append(img_path)
+        query_id.append(pid)
+        query_cam.append(camid)
+    return query_img, np.array(query_id), np.array(query_cam)
+
+def process_gallery_sysu_reverse(data_path,mode = 'all',trial = 0, relabel=False):
+    if mode == 'all':
+        ir_cameras = ['cam3', 'cam6']
+    elif mode == 'indoor':
+        ir_cameras = ['cam3', 'cam6']
+
+    file_path = os.path.join(data_path, 'exp/test_id.txt')
+    files_rgb = []
+    files_gallery_ir = []
+
+    with open(file_path, 'r') as file:
+        ids = file.read().splitlines()
+        ids = [int(y) for y in ids[0].split(',')]
+        ids = ["%04d" % x for x in ids]
+
+    for id in sorted(ids):
+        for cam in ir_cameras:
+            img_dir = os.path.join(data_path, cam, id)
+            if os.path.isdir(img_dir):
+                new_files = sorted([img_dir + '/' + i for i in os.listdir(img_dir)])
+                files_gallery_ir.append(np.random.choice(new_files))
+    gallery_img = []
+    gallery_id = []
+    gallery_cam = []
+    for img_path in files_gallery_ir:
+        camid, pid = int(img_path[-15]), int(img_path[-13:-9])
+        gallery_img.append(img_path)
+        gallery_id.append(pid)
+        gallery_cam.append(camid)
+    return gallery_img, np.array(gallery_id), np.array(gallery_cam)
+
+
+
+
+
+
+
+
+
+
