@@ -98,7 +98,9 @@ if args.method == 'id':
 
 print('==> Loading data..')
 # Data loading code
+#normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
 transform_train = transforms.Compose([
     transforms.ToPILImage(),
     transforms.RandomCrop((args.img_h, args.img_w)),
@@ -129,8 +131,8 @@ elif dataset == 'regdb':
 
 
     # testing set
-    query_img, query_label = process_test_regdb(data_path, trial=args.trial, modal='visible')
-    gall_img, gall_label = process_test_regdb(data_path, trial=args.trial, modal='thermal')
+    query_img, query_label = process_test_regdb(data_path, trial=args.trial, modal='thermal')
+    gall_img, gall_label = process_test_regdb(data_path, trial=args.trial, modal='visible')
 
     gallset = TestData(gall_img, gall_label, transform=transform_test, img_size=(args.img_w, args.img_h))
     gall_loader = data.DataLoader(gallset, batch_size=args.test_batch, shuffle=False, num_workers=args.workers)

@@ -101,7 +101,7 @@ if args.method =='id':
 
 print('==> Loading data..')
 # Data loading code
-normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],std=[0.5, 0.5, 0.5])
+normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
 transform_train = transforms.Compose([
     transforms.ToPILImage(),
     transforms.RandomCrop((args.img_h,args.img_w)),
@@ -222,11 +222,11 @@ if dataset =='regdb':
         cmc[0], cmc[4], cmc[9], cmc[19]))
     print('mAP: {:.2%}'.format(mAP))
     print(
-        'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
-            cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9], mAP), file=test_log_file)
+        'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| Rank-20: {:.2%}|mAP: {:.2%}'.format(
+            cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9],cmc[19] mAP), file=test_log_file)
     print(
-        'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
-            cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9], mAP_pool), file=test_log_file)
+        'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| Rank-20: {:.2%}|mAP: {:.2%}'.format(
+            cmc_pool[0], cmc_pool[1], cmc_pool[2], cmc_pool[3], cmc_pool[4], cmc_pool[5], cmc_pool[6], cmc_pool[7], cmc_pool[8], cmc_pool[9],cmc_pool[19] mAP_pool), file=test_log_file)
     print('POOL5: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
         cmc_pool[0], cmc_pool[4], cmc_pool[9], cmc_pool[19]))
     print('mAP: {:.2%}'.format(mAP_pool))
@@ -262,16 +262,16 @@ elif dataset =='sysu':
         print('FC: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
             cmc[0], cmc[4], cmc[9], cmc[19]))
         print(
-            'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
-                cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9], mAP),
+            'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| Rank-20: {:.2%}| mAP: {:.2%}'.format(
+                cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9],cmc[19], mAP),
             file=test_log_file)
         print('mAP: {:.2%}'.format(mAP))
         print('POOL5: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
             cmc_pool[0], cmc_pool[4], cmc_pool[9], cmc_pool[19]))
         print('mAP: {:.2%}'.format(mAP_pool))
         print(
-            'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
-                cmc_pool[0], cmc_pool[1], cmc_pool[2], cmc_pool[3], cmc_pool[4], cmc_pool[5], cmc_pool[6], cmc_pool[7], cmc_pool[8], cmc_pool[9], mAP_pool),
+            'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}|Rank-20: {:.2%}| mAP: {:.2%}'.format(
+                cmc_pool[0], cmc_pool[1], cmc_pool[2], cmc_pool[3], cmc_pool[4], cmc_pool[5], cmc_pool[6], cmc_pool[7], cmc_pool[8], cmc_pool[9],cmc_pool[19], mAP_pool),
             file=test_log_file)
 
     cmc = all_cmc /10
@@ -283,14 +283,14 @@ elif dataset =='sysu':
     print('FC: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(cmc[0], cmc[4], cmc[9], cmc[19]))
     print('mAP: {:.2%}'.format(mAP))
     print(
-        'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
-            cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9], mAP),
+        'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}|Rank-20: {:.2%}|  mAP: {:.2%}'.format(
+            cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9],cmc_pool[19], mAP),
         file=test_log_file)
     print('POOL5: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
         cmc_pool[0], cmc_pool[4], cmc_pool[9], cmc_pool[19]))
     print('mAP: {:.2%}'.format(mAP_pool))
     print(
-        'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| mAP: {:.2%}'.format(
+        'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| Rank-20: {:.2%}| mAP: {:.2%}'.format(
             cmc_pool[0], cmc_pool[1], cmc_pool[2], cmc_pool[3], cmc_pool[4], cmc_pool[5], cmc_pool[6], cmc_pool[7],
-            cmc_pool[8], cmc_pool[9], mAP_pool),
+            cmc_pool[8], cmc_pool[9],cmc_pool[19], mAP_pool),
         file=test_log_file)
