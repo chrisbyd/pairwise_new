@@ -49,7 +49,7 @@ parser.add_argument('--img_w', default=144, type=int,
                     metavar='imgw', help='img width')
 parser.add_argument('--img_h', default=288, type=int,
                     metavar='imgh', help='img height')
-parser.add_argument('--batch-size', default=16, type=int,
+parser.add_argument('--batch-size', default=8, type=int,
                     metavar='B', help='training batch size')
 parser.add_argument('--test-batch', default=64, type=int,
                     metavar='tb', help='testing batch size')

@@ -108,12 +108,13 @@ transform_train = transforms.Compose([
     transforms.ToTensor(),
     normalize,
 ])
+normalize1 = transforms.Normalize(mean=[0.5, 0.5, 0.5],std=[0.5, 0.5, 0.5])
 
 transform_test = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((args.img_h,args.img_w)),
     transforms.ToTensor(),
-    normalize,
+    normalize1,
 ])
 test_log_dir = './log/test_log/'
 test_log_path = test_log_dir + args.resume+ '.txt'
@@ -223,10 +224,10 @@ if dataset =='regdb':
     print('mAP: {:.2%}'.format(mAP))
     print(
         'FC:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| Rank-20: {:.2%}|mAP: {:.2%}'.format(
-            cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9],cmc[19] mAP), file=test_log_file)
+            cmc[0], cmc[1], cmc[2], cmc[3], cmc[4], cmc[5], cmc[6], cmc[7], cmc[8], cmc[9],cmc[19] ,mAP), file=test_log_file)
     print(
         'POOL5:   Rank-1: {:.2%} |Rank-2: {:.2%} |Rank-3: {:.2%} |Rank-4: {:.2%} |Rank-5: {:.2%} |Rank-6: {:.2%} |Rank-7: {:.2%} |Rank-8: {:.2%} | Rank-9: {:.2%} | Rank-10: {:.2%}| Rank-20: {:.2%}|mAP: {:.2%}'.format(
-            cmc_pool[0], cmc_pool[1], cmc_pool[2], cmc_pool[3], cmc_pool[4], cmc_pool[5], cmc_pool[6], cmc_pool[7], cmc_pool[8], cmc_pool[9],cmc_pool[19] mAP_pool), file=test_log_file)
+            cmc_pool[0], cmc_pool[1], cmc_pool[2], cmc_pool[3], cmc_pool[4], cmc_pool[5], cmc_pool[6], cmc_pool[7], cmc_pool[8], cmc_pool[9],cmc_pool[19], mAP_pool), file=test_log_file)
     print('POOL5: top-1: {:.2%} | top-5: {:.2%} | top-10: {:.2%}| top-20: {:.2%}'.format(
         cmc_pool[0], cmc_pool[4], cmc_pool[9], cmc_pool[19]))
     print('mAP: {:.2%}'.format(mAP_pool))
