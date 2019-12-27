@@ -4,3 +4,4 @@ log/*
 save_model/*
 __pycache__/*
 .idea/*
+log_old/*

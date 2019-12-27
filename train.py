@@ -49,7 +49,7 @@ parser.add_argument('--img_w', default=144, type=int,
                     metavar='imgw', help='img width')
 parser.add_argument('--img_h', default=288, type=int,
                     metavar='imgh', help='img height')
-parser.add_argument('--batch-size', default=8, type=int,
+parser.add_argument('--batch-size', default=3, type=int,
                     metavar='B', help='training batch size')
 parser.add_argument('--test-batch', default=64, type=int,
                     metavar='tb', help='testing batch size')
@@ -116,6 +116,7 @@ suffix = suffix + '_dim_{}'.format(args.low_dim)
 suffix = suffix + '_lamda1_{}'.format(args.lamda1)
 suffix = suffix + '_lamda2_{}'.format(args.lamda2)
 suffix = suffix + '_lamda3_{}'.format(args.lamda3)
+
 if not args.optim == 'sgd':
     suffix = suffix + '_' + args.optim
 suffix = suffix + '_' + args.arch
@@ -124,6 +125,8 @@ if dataset =='regdb':
 
 if dataset =='sysu':
     suffix = suffix + '__mode__{}'.format(args.mode)
+
+suffix = suffix + 'EmbeddingLoss'
 
 test_log_file = open(log_path + suffix + '.txt', "w")
 sys.stdout = Logger(log_path  + suffix + '_os.txt')
@@ -236,8 +239,11 @@ elif args.method == 'sc':
     criterion1.to(device)
 
 
-AutoEncoderLoss = AutoEncoderLoss()
-AutoEncoderLoss.to(device)
+CrossEmbeddingLoss = CrossAutoEncoderLoss()
+CrossEmbeddingLoss.to(device)
+
+IntraEmbeddingLoss = IntraModalAELoss()
+IntraEmbeddingLoss.to(device)
 
 
 #------------------visualizer for visualizing the auto encoding pictures
@@ -284,17 +290,21 @@ def train(epoch):
     # switch to train mode
     net.train()
     end = time.time()
-    for batch_idx, (input1, input2, label1, label2) in enumerate(trainloader):
+    for batch_idx, (input1, input2,input3,input4, label1, label2, label3, label4) in enumerate(trainloader):
 
         input1 = Variable(input1.cuda())
         input2 = Variable(input2.cuda())
+        input3 = Variable(input3.cuda())
+        input4 = Variable(input4.cuda())
         
         labels = torch.cat((label1,label2),0)
         labels = Variable(labels.cuda())
         data_time.update(time.time() - end)
         
         outputs, feat = net(input1, input2)
+        outputs1, feat1 = net(input3,input4)
         visible_img_rec ,thermal_img_rec = Rec_net(feat)
+        visible_img_rec1,thermal_img_rec1 =Rec_net(feat1)
         #debug the size of features ,labels
         # print(feat.size())
         # print(label1)
@@ -302,13 +312,17 @@ def train(epoch):
         # exit()
 
         loss_id = criterion(outputs, labels)
+
         _, predicted = outputs.max(1)
         correct += predicted.eq(labels).sum().item()
-        loss_ae = AutoEncoderLoss(input1,visible_img_rec,input2,thermal_img_rec)
+        loss_CE = CrossEmbeddingLoss(input1,visible_img_rec,input2,thermal_img_rec)
+        loss_CE += CrossEmbeddingLoss(input3,visible_img_rec1,input4,thermal_img_rec1)
+        loss_iev = IntraEmbeddingLoss(input1,visible_img_rec,input3,visible_img_rec1)
+        loss_iet = IntraEmbeddingLoss(input2,thermal_img_rec,input4,thermal_img_rec1)
         #the total loss
         #-----------------------------------------
         loss_ancillary = criterion1(feat,label1,label2)
-        loss=use*loss_ancillary + args.lamda2 * loss_id + args.lamda3*loss_ae
+        loss=use*loss_ancillary + args.lamda2 * loss_id + args.lamda3*(loss_CE+loss_iev+loss_iet)
        #  loss = loss_ae
 
         optimizer.zero_grad()    
@@ -384,7 +398,7 @@ def test(epoch):
     
 # training
 print('==> Start Training...')    
-for epoch in range(start_epoch, 100-start_epoch):
+for epoch in range(start_epoch, 50-start_epoch):
 
     print('==> Preparing Data Loader...')
     # identity sampler
@@ -392,6 +406,8 @@ for epoch in range(start_epoch, 100-start_epoch):
         trainset.train_thermal_label, color_pos, thermal_pos, args.batch_size)
     trainset.cIndex = sampler.index1 # color index
     trainset.tIndex = sampler.index2 # thermal index
+    trainset.cIndex1 = sampler.index3
+    trainset.tIndex1 = sampler.index4
     trainloader = data.DataLoader(trainset, batch_size=args.batch_size,\
         sampler = sampler, num_workers=args.workers, drop_last =True)
     

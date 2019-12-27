@@ -8,7 +8,7 @@ import torch.utils.data as data
 
 
 class SYSUData(data.Dataset):
-    def __init__(self, data_dir,  transform=None, colorIndex = None, thermalIndex = None):
+    def __init__(self, data_dir,  transform=None, colorIndex = None, thermalIndex = None,colorIndex1 =None, thermalIndex1= None):
         
         # Load training images (path) and labels
         train_color_image = np.load(data_dir + 'train_rgb_resized_img.npy')
@@ -23,23 +23,28 @@ class SYSUData(data.Dataset):
         self.transform = transform
         self.cIndex = colorIndex
         self.tIndex = thermalIndex
+        self.cIndex1 = colorIndex1
+        self.tIndex1 = thermalIndex1
 
     def __getitem__(self, index):
 
         img1,  target1 = self.train_color_image[self.cIndex[index]],  self.train_color_label[self.cIndex[index]]
         img2,  target2 = self.train_thermal_image[self.tIndex[index]], self.train_thermal_label[self.tIndex[index]]
-        
+        img3, target3 = self.train_color_image[self.cIndex1[index]] ,self.train_color_label[self.cIndex1[index]]
+        img4 , target4 = self.train_thermal_image[self.tIndex1[index]], self.train_thermal_label[self.tIndex1[index]]
+
         img1 = self.transform(img1)
         img2 = self.transform(img2)
-
-        return img1, img2, target1, target2
+        img3 = self.transform(img3)
+        img4 = self.transform(img4)
+        return img1, img2,img3,img4, target1, target2,target3,target4
 
     def __len__(self):
         return len(self.train_color_label)
         
         
 class RegDBData(data.Dataset):
-    def __init__(self, data_dir, trial, transform=None, colorIndex = None, thermalIndex = None):
+    def __init__(self, data_dir, trial, transform=None, colorIndex = None, thermalIndex = None,colorIndex1 =None, thermalIndex1= None):
         # Load training images (path) and labels
         train_color_list   = data_dir + 'idx/train_visible_{}'.format(trial)+ '.txt'
         train_thermal_list = data_dir + 'idx/train_thermal_{}'.format(trial)+ '.txt'
@@ -75,18 +80,25 @@ class RegDBData(data.Dataset):
         self.transform = transform
         self.cIndex = colorIndex
         self.tIndex = thermalIndex
+        self.cIndex1 = colorIndex1
+        self.tIndex1 = thermalIndex1
 
     def __getitem__(self, index):
 
         img1,  target1 = self.train_color_image[self.cIndex[index]],  self.train_color_label[self.cIndex[index]]
         img2,  target2 = self.train_thermal_image[self.tIndex[index]], self.train_thermal_label[self.tIndex[index]]
+        img3, target3 = self.train_color_image[self.cIndex1[index]], self.train_color_label[self.cIndex1[index]]
+        img4, target4 = self.train_thermal_image[self.tIndex1[index]], self.train_thermal_label[self.tIndex1[index]]
+
 
 
         img1 = self.transform(img1)
         img2 = self.transform(img2)
+        img3 = self.transform(img3)
+        img4 = self.transform(img4)
 
 
-        return img1, img2, target1, target2
+        return img1, img2,img3,img4, target1, target2, target3, target4
 
     def __len__(self):
         return len(self.train_color_label)

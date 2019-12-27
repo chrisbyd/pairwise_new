@@ -42,6 +42,8 @@ class FeatureBlock(nn.Module):
         feat_block = []
         feat_block += [nn.Linear(input_dim, low_dim)] 
         feat_block += [nn.BatchNorm1d(low_dim)]
+        if self.training:
+            feat_block +=[nn.Dropout(p=dropout)]
         
         feat_block = nn.Sequential(*feat_block)
         feat_block.apply(weights_init_kaiming)
@@ -56,7 +58,7 @@ class ClassBlock(nn.Module):
         classifier = []       
         if relu:
             classifier += [nn.LeakyReLU(0.1)]
-        if dropout:
+        if self.training:
             classifier += [nn.Dropout(p=dropout)]
         
         classifier += [nn.Linear(input_dim, class_num)]
